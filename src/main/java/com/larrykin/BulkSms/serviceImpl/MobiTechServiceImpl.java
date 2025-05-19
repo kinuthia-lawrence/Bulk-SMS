@@ -1,6 +1,7 @@
 package com.larrykin.BulkSms.serviceImpl;
 
 import com.larrykin.BulkSms.services.MobiTechSmsService;
+import io.github.cdimascio.dotenv.Dotenv;
 import org.springframework.stereotype.Service;
 
 import java.io.BufferedReader;
@@ -16,9 +17,11 @@ import java.net.URL;
 @Service
 public class MobiTechServiceImpl implements MobiTechSmsService {
 
-    private static final String API_URL_SMS = "https://api.mobitechtechnologies.com/sms/sendsms";
-    private static final String API_URL_VERIFY = "https://api.mobitechtechnologies.com/sms/mobile";
-    private static final String API_KEY = "8104671fbc64b6d6b39d802ddfa4f63ad2f51602b8118f5e34a2e7d4a25906b5";
+    private final Dotenv dotenv = Dotenv.load();
+    private final String API_URL_SMS = dotenv.get("MOBITECH_API_URL_SMS");
+    private final String API_URL_VERIFY = dotenv.get("MOBITECH_API_URL_VERIFY");
+    private final String API_KEY = dotenv.get("MOBITECH_API_KEY");
+
 
     /**
      * Sends an SMS message to a predefined mobile number using the MobiTech API.
