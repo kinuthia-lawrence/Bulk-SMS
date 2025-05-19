@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Verify Mobile Number</title>
+</head>
+<body>
+    <h1>Verify Mobile Number</h1>
+    <form action="/api/sms/verify" method="get">
+        <label for="mobile">Mobile Number:</label>
+        <input type="text" id="mobile" name="mobile" required>
+        <button type="submit">Verify</button>
+    </form>
+</body>
+</html>

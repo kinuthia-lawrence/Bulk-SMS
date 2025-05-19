@@ -1,2 +1,6 @@
 /mvnw text eol=lf
 *.cmd text eol=crlf
+
+### Frontend ###
+
+/src/main/frontend/node_modules/
