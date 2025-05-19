@@ -32,15 +32,15 @@ public class MobiTechServiceImpl implements MobiTechSmsService {
     @Override
     public void sendSms() {
         try {
-            String payload = """
-                        {
-                            "mobile": "+254710986455",
-                            "response_type": "json",
-                            "sender_name": "COOP_UNI",
-                            "service_id": 0,
-                            "message": "This is a message.\\n\\nRegards\\nLarrykin343 Technologies"
-                        }
-                    """;
+            String payload = String.format("""
+                    {
+                        "mobile": "%s",
+                        "response_type": "json",
+                        "sender_name": "COOP_UNI",
+                        "service_id": 0,
+                        "message": "This is a message.\\n\\nRegards\\nLarrykin343 Technologies"
+                    }
+                    """, dotenv.get("RECIPIENT_PHONE_NUMBER"));
 
             URL url = new URL(API_URL_SMS);
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
