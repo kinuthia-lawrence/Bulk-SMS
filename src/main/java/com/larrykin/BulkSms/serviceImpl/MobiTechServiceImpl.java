@@ -35,6 +35,12 @@ public class MobiTechServiceImpl implements MobiTechSmsService {
             // Use a sender name from environment variables instead of hardcoding
             String senderName = dotenv.get("SENDER_NAME");
 
+            // In sendSms method
+            String recipientNumber = dotenv.get("RECIPIENT_PHONE_NUMBER");
+            if (!recipientNumber.startsWith("+") && recipientNumber.startsWith("254")) {
+                recipientNumber = "+" + recipientNumber;
+            }
+
             String payload = String.format("""
                     {
                         "mobile": "%s",
@@ -43,7 +49,7 @@ public class MobiTechServiceImpl implements MobiTechSmsService {
                         "service_id": 0,
                         "message": "This is a message.\\n\\nRegards\\nLarrykin343 Technologies"
                     }
-                    """, dotenv.get("RECIPIENT_PHONE_NUMBER"), senderName);
+                    """, recipientNumber, senderName);
 
             URL url = new URL(API_URL_SMS);
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
@@ -142,7 +148,7 @@ public class MobiTechServiceImpl implements MobiTechSmsService {
      * Sends SMS messages to multiple recipients.
      *
      * @param mobileNumbers Array of mobile numbers to send messages to
-     * @param message Message content to send (if null, uses default message)
+     * @param message       Message content to send (if null, uses default message)
      * @return JSON array with response for each recipient
      */
     @Override
@@ -162,6 +168,19 @@ public class MobiTechServiceImpl implements MobiTechSmsService {
                     continue;
                 }
 
+                // Format phone number to ensure it has + prefix
+                String formattedNumber = mobileNumbers[i].trim();
+                if (!formattedNumber.startsWith("+")) {
+                    // If it starts with 0, replace with +254
+                    if (formattedNumber.startsWith("0")) {
+                        formattedNumber = "+254" + formattedNumber.substring(1);
+                    }
+                    // If it starts with 254 without +, add the +
+                    else if (formattedNumber.startsWith("254")) {
+                        formattedNumber = "+" + formattedNumber;
+                    }
+                }
+
                 String payload = String.format("""
                         {
                             "mobile": "%s",
@@ -170,7 +189,7 @@ public class MobiTechServiceImpl implements MobiTechSmsService {
                             "service_id": 0,
                             "message": "%s"
                         }
-                        """, mobileNumbers[i].trim(), senderName, textToSend);
+                        """, formattedNumber, senderName, textToSend);
 
                 URL url = new URL(API_URL_SMS);
                 HttpURLConnection connection = (HttpURLConnection) url.openConnection();
