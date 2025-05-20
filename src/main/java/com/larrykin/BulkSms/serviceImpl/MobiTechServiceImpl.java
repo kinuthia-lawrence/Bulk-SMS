@@ -24,23 +24,26 @@ public class MobiTechServiceImpl implements MobiTechSmsService {
 
 
     /**
-     * Sends an SMS message to a predefined mobile number using the MobiTech API.
-     * The message contains hardcoded values for recipient, sender name, and content.
+     * /**
+     * Sends an SMS message and returns the API response.
      *
-     * @throws RuntimeException if any error occurs during the API request process
+     * @return JSON response containing status code, message ID, and other details
      */
     @Override
-    public void sendSms() {
+    public String sendSms() {
         try {
+            // Use a sender name from environment variables instead of hardcoding
+            String senderName = dotenv.get("SENDER_NAME");
+
             String payload = String.format("""
                     {
                         "mobile": "%s",
                         "response_type": "json",
-                        "sender_name": "COOP_UNI",
+                        "sender_name": "%s",
                         "service_id": 0,
                         "message": "This is a message.\\n\\nRegards\\nLarrykin343 Technologies"
                     }
-                    """, dotenv.get("RECIPIENT_PHONE_NUMBER"));
+                    """, dotenv.get("RECIPIENT_PHONE_NUMBER"), senderName);
 
             URL url = new URL(API_URL_SMS);
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
@@ -57,15 +60,23 @@ public class MobiTechServiceImpl implements MobiTechSmsService {
             int responseCode = connection.getResponseCode();
             System.out.println("Response Code: " + responseCode);
 
-            if (responseCode == HttpURLConnection.HTTP_OK) {
-                System.out.println("SMS sent successfully.");
-            } else {
-                System.out.println("Failed to send SMS. Response Code: " + responseCode);
+            // Read response regardless of success or failure
+            try (BufferedReader br = new BufferedReader(
+                    new InputStreamReader(responseCode == HttpURLConnection.HTTP_OK ?
+                            connection.getInputStream() : connection.getErrorStream(), "utf-8"))) {
+                StringBuilder response = new StringBuilder();
+                String responseLine;
+                while ((responseLine = br.readLine()) != null) {
+                    response.append(responseLine.trim());
+                }
+                System.out.println("Response: " + response);
+                return response.toString();
             }
 
         } catch (Exception e) {
             e.printStackTrace();
-            System.out.println("An error occurred while sending the SMS.");
+            return String.format("[{\"status_code\":\"9999\",\"status_desc\":\"Error: %s\"}]",
+                    e.getMessage().replace("\"", "\\\""));
         }
     }
 
@@ -79,7 +90,17 @@ public class MobiTechServiceImpl implements MobiTechSmsService {
     @Override
     public String verifyMobileNumber(String mobileNumber) {
         try {
-            URL url = new URL(API_URL_VERIFY + "?mobile=" + mobileNumber);
+            // Format mobile number according to API examples (remove + and possibly strip country code)
+            String formattedNumber = mobileNumber.replace("+", "");
+            if (formattedNumber.startsWith("254")) {
+                // Remove country code if API expects only local number (based on examples)
+                formattedNumber = formattedNumber.substring(3);
+            }
+
+            // Add required return=json parameter
+            URL url = new URL(API_URL_VERIFY + "?return=json&mobile=" + formattedNumber);
+            System.out.println("Requesting URL: " + url); // Debug the final URL
+
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("GET");
             connection.setRequestProperty("h_api_key", API_KEY);
@@ -98,13 +119,21 @@ public class MobiTechServiceImpl implements MobiTechSmsService {
                     return response.toString();
                 }
             } else {
-                System.out.println("Failed to verify mobile number. Response Code: " + responseCode);
-                return "Verification failed with response code: " + responseCode;
+                try (BufferedReader br = new BufferedReader(new InputStreamReader(connection.getErrorStream(), "utf-8"))) {
+                    StringBuilder errorResponse = new StringBuilder();
+                    String errorLine;
+                    while ((errorLine = br.readLine()) != null) {
+                        errorResponse.append(errorLine.trim());
+                    }
+                    System.out.println("Error Response: " + errorResponse);
+                    return "Verification failed with response code: " + responseCode + " - " + errorResponse;
+                } catch (Exception e) {
+                    return "Verification failed with response code: " + responseCode;
+                }
             }
-
         } catch (Exception e) {
             e.printStackTrace();
-            return "An error occurred while verifying the mobile number.";
+            return "An error occurred while verifying the mobile number: " + e.getMessage();
         }
     }
 }

@@ -9,9 +9,10 @@ public interface MobiTechSmsService {
 
     /**
      * Sends an SMS message using the MobiTech API.
-     * Implementation typically handles the API connection and payload formatting.
+     *
+     * @return JSON response from the API containing status and message details
      */
-    void sendSms();
+    String sendSms();
 
     /**
      * Verifies if a given mobile number is valid using the MobiTech API.
