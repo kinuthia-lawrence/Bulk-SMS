@@ -38,4 +38,17 @@ public class MobiTechSmsController {
     public String verifyMobileNumber(@RequestParam String mobile) {
         return mobiTechSmsService.verifyMobileNumber(mobile);
     }
+
+    /**
+     * Endpoint to send bulk SMS messages to multiple recipients.
+     *
+     * @param recipients Array of recipient phone numbers
+     * @param message Optional message content (uses default if not provided)
+     * @return JSON array with status for each recipient
+     */
+    @PostMapping("/bulk")
+    public String sendBulkSms(@RequestParam String[] recipients,
+                             @RequestParam(required = false) String message) {
+        return mobiTechSmsService.sendBulkSms(recipients, message);
+    }
 }

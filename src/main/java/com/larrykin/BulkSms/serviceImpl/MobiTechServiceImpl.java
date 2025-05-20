@@ -136,4 +136,82 @@ public class MobiTechServiceImpl implements MobiTechSmsService {
             return "An error occurred while verifying the mobile number: " + e.getMessage();
         }
     }
+
+
+    /**
+     * Sends SMS messages to multiple recipients.
+     *
+     * @param mobileNumbers Array of mobile numbers to send messages to
+     * @param message Message content to send (if null, uses default message)
+     * @return JSON array with response for each recipient
+     */
+    @Override
+    public String sendBulkSms(String[] mobileNumbers, String message) {
+        if (mobileNumbers == null || mobileNumbers.length == 0) {
+            return "[{\"status_code\":\"9999\",\"status_desc\":\"Error: No recipients provided\"}]";
+        }
+
+        StringBuilder allResponses = new StringBuilder("[");
+        String defaultMessage = "This is a message.\\n\\nRegards\\nLarrykin343 Technologies";
+        String textToSend = (message != null && !message.isEmpty()) ? message : defaultMessage;
+        String senderName = dotenv.get("SENDER_NAME");
+
+        try {
+            for (int i = 0; i < mobileNumbers.length; i++) {
+                if (mobileNumbers[i] == null || mobileNumbers[i].trim().isEmpty()) {
+                    continue;
+                }
+
+                String payload = String.format("""
+                        {
+                            "mobile": "%s",
+                            "response_type": "json",
+                            "sender_name": "%s",
+                            "service_id": 0,
+                            "message": "%s"
+                        }
+                        """, mobileNumbers[i].trim(), senderName, textToSend);
+
+                URL url = new URL(API_URL_SMS);
+                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                connection.setRequestMethod("POST");
+                connection.setRequestProperty("h_api_key", API_KEY);
+                connection.setRequestProperty("Content-Type", "application/json");
+                connection.setDoOutput(true);
+
+                try (OutputStream os = connection.getOutputStream()) {
+                    byte[] input = payload.getBytes("utf-8");
+                    os.write(input, 0, input.length);
+                }
+
+                // Read response
+                try (BufferedReader br = new BufferedReader(
+                        new InputStreamReader(connection.getInputStream(), "utf-8"))) {
+                    StringBuilder response = new StringBuilder();
+                    String responseLine;
+                    while ((responseLine = br.readLine()) != null) {
+                        response.append(responseLine.trim());
+                    }
+
+                    // Remove the brackets from individual responses for clean array formatting
+                    String formattedResponse = response.toString().replace("[", "").replace("]", "");
+
+                    // Add to collection of responses
+                    if (i > 0) allResponses.append(",");
+                    allResponses.append(formattedResponse);
+                } catch (Exception e) {
+                    if (i > 0) allResponses.append(",");
+                    allResponses.append(String.format("{\"status_code\":\"9999\",\"status_desc\":\"Error for %s: %s\"}",
+                            mobileNumbers[i], e.getMessage().replace("\"", "\\\"")));
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return String.format("[{\"status_code\":\"9999\",\"status_desc\":\"Bulk send error: %s\"}]",
+                    e.getMessage().replace("\"", "\\\""));
+        }
+
+        allResponses.append("]");
+        return allResponses.toString();
+    }
 }

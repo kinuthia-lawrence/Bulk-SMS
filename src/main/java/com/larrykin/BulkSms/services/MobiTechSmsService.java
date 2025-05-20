@@ -21,4 +21,14 @@ public interface MobiTechSmsService {
      * @return JSON response from the API containing verification results or an error message
      */
     String verifyMobileNumber(String mobileNumber);
+
+
+    /**
+     * Sends SMS messages to multiple recipients.
+     *
+     * @param mobileNumbers Array of mobile numbers to send messages to
+     * @param message Message content to send (if null, uses default message)
+     * @return JSON array with response for each recipient
+     */
+    String sendBulkSms(String[] mobileNumbers, String message);
 }
