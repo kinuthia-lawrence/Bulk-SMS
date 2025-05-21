@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.*;
  * through the MobiTech Technologies API.
  */
 @RestController
-@RequestMapping("/api/sms")
+@RequestMapping("/api/sms/mobitech")
 public class MobiTechSmsController {
     @Autowired
     private MobiTechSmsService mobiTechSmsService;

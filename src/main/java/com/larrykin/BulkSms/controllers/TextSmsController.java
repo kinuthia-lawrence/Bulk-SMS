@@ -13,7 +13,7 @@ import java.util.Map;
  * retrieving delivery reports, and checking account balance.
  */
 @RestController
-@RequestMapping("/api/textsms")
+@RequestMapping("/api/sms/textsms")
 public class TextSmsController {
 
     @Autowired
