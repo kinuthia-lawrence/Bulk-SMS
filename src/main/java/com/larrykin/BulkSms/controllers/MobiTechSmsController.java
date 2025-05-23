@@ -23,7 +23,6 @@ public class MobiTechSmsController {
      */
     @PostMapping("/send")
     public String sendSms() {
-
         return mobiTechSmsService.sendSms();
     }
 
